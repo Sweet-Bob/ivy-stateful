@@ -55,6 +55,8 @@ export default Ember.Mixin.create({
     let currentState = this.get('currentState');
     let state = currentState;
 
+    this.set('targetState', name);
+
     while (state.parentState && !state.hasOwnProperty(pivotName)) {
       if (state.exit) { state.exit(this); }
       state = state.parentState;
