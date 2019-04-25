@@ -42,6 +42,7 @@ export default Mixin.create({
     this.set('previousState', currentState);
 
     newState = rootState[name];
+    assert(`State ${name} is not exist`, !!newState);
     assert(`You must provide enter function for ${name} state`, newState.enter);
     this.set('currentStateName', name);;
     this.set('currentState', newState);
