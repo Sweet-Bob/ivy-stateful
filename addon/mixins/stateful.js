@@ -1,61 +1,52 @@
-import Ember from 'ember';
+import { assert }  from '@ember/debug';
+import Mixin       from '@ember/object/mixin';
+import EError      from '@ember/error';
 
-function wireState(state, parentState, stateName) {
-  state = Ember.mixin(parentState ? Object.create(parentState) : {}, state);
-  state.parentState = parentState;
-  state.stateName = stateName;
 
-  for (let prop in state) {
-    if (!state.hasOwnProperty(prop) || prop === 'parentState' || prop === 'stateName') { continue; }
-    if (typeof state[prop] === 'object') {
-      state[prop] = wireState(state[prop], state, stateName + '.' + prop);
-    }
-  }
-
-  return state;
-}
-
-export default Ember.Mixin.create({
+export default Mixin.create({
   init: function() {
     this._super();
 
-    let rootState = this.get('rootState');
-    if (rootState) {
-      rootState = wireState(rootState, null, 'rootState');
-    } else {
-      throw new Ember.Error('No rootState defined on ' + String(this) + '.');
+    let { rootState, initialState } = this.getProperties('rootState', 'initialState');
+
+    if (!rootState) {
+        throw new EError('No rootState defined on ' + String(this) + '.');
     }
 
-    this.set('currentState', rootState);
-
-    let initialState = this.get('initialState');
     if (!initialState) {
-      throw new Ember.Error('No initialState defined on ' + String(this) + '.');
+      throw new EError('No initialState defined on ' + String(this) + '.');
     }
+
+    const rootStateNames = Object.keys(rootState);
+
+    rootStateNames.forEach(function(stateName) {
+        rootState[stateName].stateName = stateName;
+    });
 
     this.transitionTo(initialState);
   },
 
   transitionTo: function(name) {
-    let pivotName = name.split('.').shift();
+
     let currentState = this.get('currentState');
-    let state = currentState;
+    let rootState = this.get('rootState');
+    let newState;
 
-    this.set('previousState', currentState.stateName);
-    this.set('targetState', name);
+    this.set('targetState', newState);
 
-    while (state.parentState && !state.hasOwnProperty(pivotName)) {
-      if (state.exit) { state.exit(this); }
-      state = state.parentState;
+    if (currentState) {
+        assert(`You must provide enter function for ${name} state`, currentState.exit);
+        currentState.exit(this);
     }
 
-    let path = name.split('.');
+    this.set('previousState', currentState);
 
-    for (let i = 0; i < path.length; i++) {
-      state = state[path[i]];
-      if (state.enter) { state.enter(this); }
-    }
+    newState = rootState[name];
+    assert(`You must provide enter function for ${name} state`, newState.enter);
+    this.set('currentStateName', name);;
+    this.set('currentState', newState);
+    newState.enter(this);
 
-    this.set('currentState', state);
   }
+
 });
