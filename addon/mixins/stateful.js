@@ -36,20 +36,6 @@ export default Ember.Mixin.create({
     this.transitionTo(initialState);
   },
 
-  send: function(name) {
-    let currentState = this.get('currentState');
-
-    if (!currentState[name]) {
-      throw new Ember.Error('Attempted to handle event "' + name +
-                            '" on ' + String(this) + ' while in state ' +
-                            currentState.stateName + '.');
-    }
-
-    let args = [this].concat(Array.prototype.slice.call(arguments, 1));
-
-    return currentState[name].apply(null, args);
-  },
-
   transitionTo: function(name) {
     let pivotName = name.split('.').shift();
     let currentState = this.get('currentState');
