@@ -36,7 +36,7 @@ export default Mixin.create({
 
     if (currentState) {
         assert(`You must provide enter function for ${name} state`, currentState.exit);
-        currentState.exit(this);
+        currentState.exit.call(this);
     }
 
     this.set('previousState', currentState);
@@ -46,7 +46,7 @@ export default Mixin.create({
     assert(`You must provide enter function for ${name} state`, newState.enter);
     this.set('currentStateName', name);;
     this.set('currentState', newState);
-    newState.enter(this);
+    newState.enter.call(this);
 
   }
 
